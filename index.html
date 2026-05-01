@@ -4,13 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fake Typer Pro - Symulator Kodowania</title>
+    <title>Fake Typer Pro - Identical Layout</title>
     <style>
         :root {
             --bg-color: #0d1117;
-            --text-color: #39ff14; /* Matrix Green */
+            --text-color: #39ff14;
             --accent-color: #58a6ff;
-            --font-family: 'Courier New', Courier, monospace;
         }
 
         body, html {
@@ -19,94 +18,97 @@
             height: 100%;
             background-color: var(--bg-color);
             color: var(--text-color);
-            font-family: var(--font-family);
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
             overflow: hidden;
         }
 
-        /* Ekran powitalny / Ustawienia */
+        /* Overlay startowy */
         #setup-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(13, 17, 23, 0.95);
+            background: #0d1117;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 100;
-            padding: 20px;
-            box-sizing: border-box;
+            z-index: 1000;
         }
 
         .container {
-            width: 100%;
-            max-width: 600px;
-            text-align: center;
+            width: 80%;
+            max-width: 800px;
         }
-
-        h1 { color: var(--accent-color); margin-bottom: 20px; }
 
         textarea {
             width: 100%;
-            height: 200px;
+            height: 300px;
             background: #161b22;
-            color: #fff;
-            border: 1px solid var(--accent-color);
-            border-radius: 5px;
+            color: #c9d1d9;
+            border: 2px solid #30363d;
+            border-radius: 6px;
             padding: 15px;
             font-family: monospace;
-            resize: none;
-            margin-bottom: 20px;
+            font-size: 14px;
             outline: none;
+            box-sizing: border-box;
+        }
+
+        textarea:focus {
+            border-color: var(--accent-color);
         }
 
         .btn {
-            background: var(--accent-color);
+            margin-top: 20px;
+            background: #238636;
             color: white;
             border: none;
-            padding: 12px 30px;
-            font-size: 1.1rem;
+            padding: 15px 40px;
+            font-size: 16px;
+            font-weight: bold;
             cursor: pointer;
-            border-radius: 5px;
-            transition: transform 0.2s;
+            border-radius: 6px;
+            width: 100%;
         }
 
-        .btn:hover { transform: scale(1.05); }
-
-        /* Obszar pisania */
-        #typing-area {
-            padding: 20px;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            font-size: 18px;
-            line-height: 1.5;
+        /* GŁÓWNY OBSZAR PISANIA */
+        #screen {
+            width: 100%;
             height: 100vh;
+            padding: 25px;
             box-sizing: border-box;
             overflow-y: auto;
             display: none;
+            /* To zachowuje identyczny układ tekstu: spacje, tabulatory, entery */
+            white-space: pre-wrap; 
+            word-wrap: break-word;
+            font-size: 18px;
+            line-height: 1.4;
         }
 
-        /* Kursor */
-        #typing-area::after {
-            content: "|";
-            animation: blink 0.7s infinite;
+        #cursor {
+            display: inline-block;
+            width: 10px;
+            height: 20px;
+            background: var(--text-color);
+            margin-left: 2px;
+            vertical-align: middle;
+            animation: blink 0.8s infinite;
         }
 
         @keyframes blink {
-            0% { opacity: 0; }
-            50% { opacity: 1; }
-            100% { opacity: 0; }
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
         }
 
-        .controls-hint {
+        .hint {
             position: fixed;
             bottom: 10px;
-            right: 10px;
+            right: 20px;
+            color: #444;
             font-size: 12px;
-            color: #555;
-            pointer-events: none;
         }
     </style>
 </head>
@@ -114,82 +116,60 @@
 
     <div id="setup-overlay">
         <div class="container">
-            <h1>Fake Typer Pro</h1>
-            <p>Wklej tekst (kod, artykuł, cokolwiek), który chcesz "pisać":</p>
-            <textarea id="source-text" placeholder="Wklej tutaj swój tekst..."></textarea>
-            <br>
-            <button class="btn" onclick="startTyping()">Zacznij symulację</button>
-            <p style="color: #666; font-size: 0.9em; margin-top: 15px;">
-                Po uruchomieniu: uderzaj w dowolne klawisze na klawiaturze.<br>
-                Naciśnij <b>ESC</b>, aby wrócić do edycji.
-            </p>
+            <h2 style="color: white; margin-bottom: 10px;">Fake Typer - Zachowanie Układu</h2>
+            <p style="color: #8b949e; margin-bottom: 20px;">Wklej tekst (zachowamy spacje, tabulatory i entery):</p>
+            <textarea id="source-text" placeholder="Wklej tutaj np. kod źródłowy..."></textarea>
+            <button class="btn" onclick="start()">URUCHOM SYMULACJĘ</button>
         </div>
     </div>
 
-    <div id="typing-area"></div>
-
-    <div class="controls-hint">Naciśnij ESC, aby zresetować</div>
+    <div id="screen"></div>
+    <div class="hint">ESC - powrót</div>
 
     <script>
         let fullText = "";
         let currentIndex = 0;
-        const typingArea = document.getElementById('typing-area');
-        const setupOverlay = document.getElementById('setup-overlay');
-        const sourceText = document.getElementById('source-text');
+        const screen = document.getElementById('screen');
+        const setup = document.getElementById('setup-overlay');
+        const input = document.getElementById('source-text');
 
-        // Funkcja uruchamiająca tryb pisania
-        function startTyping() {
-            fullText = sourceText.value;
-            if (fullText.trim() === "") {
-                alert("Najpierw wklej jakiś tekst!");
-                return;
-            }
+        function start() {
+            fullText = input.value;
+            if(!fullText) return alert("Wklej tekst!");
+            
             currentIndex = 0;
-            typingArea.innerHTML = "";
-            setupOverlay.style.display = 'none';
-            typingArea.style.display = 'block';
+            screen.innerHTML = '<span id="output"></span><span id="cursor"></span>';
+            setup.style.display = 'none';
+            screen.style.display = 'block';
         }
 
-        // Obsługa klawiatury
         document.addEventListener('keydown', function(e) {
-            // Wyjście przez ESC
             if (e.key === "Escape") {
-                setupOverlay.style.display = 'flex';
-                typingArea.style.display = 'none';
+                setup.style.display = 'flex';
+                screen.style.display = 'none';
                 return;
             }
 
-            // Jeśli jesteśmy w trybie pisania
-            if (setupOverlay.style.display === 'none') {
-                e.preventDefault(); // Blokujemy normalne działanie klawiszy
+            // Sprawdzamy czy symulacja trwa
+            if (screen.style.display === 'block') {
+                e.preventDefault();
+                
+                // Ignoruj klawisze systemowe
+                if (e.key.length > 1 && e.key !== "Enter" && e.key !== "Backspace") return;
 
-                // Ignorujemy klawisze funkcyjne (Shift, Ctrl itp.), chyba że chcesz inaczej
-                if (e.key.length === 1 || e.key === "Enter" || e.key === "Backspace") {
-                    addCharacters(1); // Ile znaków ma się pojawić przy jednym wciśnięciu
+                // Dodaj 3 znaki przy każdym kliknięciu dla efektu tempa
+                for(let i=0; i<3; i++) {
+                    if (currentIndex < fullText.length) {
+                        const output = document.getElementById('output');
+                        output.textContent += fullText[currentIndex];
+                        currentIndex++;
+                    }
                 }
+                
+                // Automatyczne przewijanie do kursora
+                screen.scrollTop = screen.scrollHeight;
             }
         });
-
-        function addCharacters(num) {
-            if (currentIndex >= fullText.length) return;
-
-            for (let i = 0; i < num; i++) {
-                if (currentIndex < fullText.length) {
-                    const char = fullText[currentIndex];
-                    // Obsługa nowej linii
-                    if (char === "\n") {
-                        typingArea.innerHTML += "<br>";
-                    } else {
-                        typingArea.textContent += char;
-                    }
-                    currentIndex++;
-                }
-            }
-            
-            // Auto-scroll na dół
-            window.scrollTo(0, document.body.scrollHeight);
-            typingArea.scrollTop = typingArea.scrollHeight;
-        }
     </script>
 </body>
 </html>
