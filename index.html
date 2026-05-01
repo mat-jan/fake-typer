@@ -1,0 +1,195 @@
+
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fake Typer Pro - Symulator Kodowania</title>
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --text-color: #39ff14; /* Matrix Green */
+            --accent-color: #58a6ff;
+            --font-family: 'Courier New', Courier, monospace;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-family);
+            overflow: hidden;
+        }
+
+        /* Ekran powitalny / Ustawienia */
+        #setup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(13, 17, 23, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        h1 { color: var(--accent-color); margin-bottom: 20px; }
+
+        textarea {
+            width: 100%;
+            height: 200px;
+            background: #161b22;
+            color: #fff;
+            border: 1px solid var(--accent-color);
+            border-radius: 5px;
+            padding: 15px;
+            font-family: monospace;
+            resize: none;
+            margin-bottom: 20px;
+            outline: none;
+        }
+
+        .btn {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover { transform: scale(1.05); }
+
+        /* Obszar pisania */
+        #typing-area {
+            padding: 20px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-size: 18px;
+            line-height: 1.5;
+            height: 100vh;
+            box-sizing: border-box;
+            overflow-y: auto;
+            display: none;
+        }
+
+        /* Kursor */
+        #typing-area::after {
+            content: "|";
+            animation: blink 0.7s infinite;
+        }
+
+        @keyframes blink {
+            0% { opacity: 0; }
+            50% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        .controls-hint {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            font-size: 12px;
+            color: #555;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="setup-overlay">
+        <div class="container">
+            <h1>Fake Typer Pro</h1>
+            <p>Wklej tekst (kod, artykuł, cokolwiek), który chcesz "pisać":</p>
+            <textarea id="source-text" placeholder="Wklej tutaj swój tekst..."></textarea>
+            <br>
+            <button class="btn" onclick="startTyping()">Zacznij symulację</button>
+            <p style="color: #666; font-size: 0.9em; margin-top: 15px;">
+                Po uruchomieniu: uderzaj w dowolne klawisze na klawiaturze.<br>
+                Naciśnij <b>ESC</b>, aby wrócić do edycji.
+            </p>
+        </div>
+    </div>
+
+    <div id="typing-area"></div>
+
+    <div class="controls-hint">Naciśnij ESC, aby zresetować</div>
+
+    <script>
+        let fullText = "";
+        let currentIndex = 0;
+        const typingArea = document.getElementById('typing-area');
+        const setupOverlay = document.getElementById('setup-overlay');
+        const sourceText = document.getElementById('source-text');
+
+        // Funkcja uruchamiająca tryb pisania
+        function startTyping() {
+            fullText = sourceText.value;
+            if (fullText.trim() === "") {
+                alert("Najpierw wklej jakiś tekst!");
+                return;
+            }
+            currentIndex = 0;
+            typingArea.innerHTML = "";
+            setupOverlay.style.display = 'none';
+            typingArea.style.display = 'block';
+        }
+
+        // Obsługa klawiatury
+        document.addEventListener('keydown', function(e) {
+            // Wyjście przez ESC
+            if (e.key === "Escape") {
+                setupOverlay.style.display = 'flex';
+                typingArea.style.display = 'none';
+                return;
+            }
+
+            // Jeśli jesteśmy w trybie pisania
+            if (setupOverlay.style.display === 'none') {
+                e.preventDefault(); // Blokujemy normalne działanie klawiszy
+
+                // Ignorujemy klawisze funkcyjne (Shift, Ctrl itp.), chyba że chcesz inaczej
+                if (e.key.length === 1 || e.key === "Enter" || e.key === "Backspace") {
+                    addCharacters(1); // Ile znaków ma się pojawić przy jednym wciśnięciu
+                }
+            }
+        });
+
+        function addCharacters(num) {
+            if (currentIndex >= fullText.length) return;
+
+            for (let i = 0; i < num; i++) {
+                if (currentIndex < fullText.length) {
+                    const char = fullText[currentIndex];
+                    // Obsługa nowej linii
+                    if (char === "\n") {
+                        typingArea.innerHTML += "<br>";
+                    } else {
+                        typingArea.textContent += char;
+                    }
+                    currentIndex++;
+                }
+            }
+            
+            // Auto-scroll na dół
+            window.scrollTo(0, document.body.scrollHeight);
+            typingArea.scrollTop = typingArea.scrollHeight;
+        }
+    </script>
+</body>
+</html>
