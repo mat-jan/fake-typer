@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fake Typer Pro - Identical Layout</title>
+    <title>Asystent kodowania</title>
     <style>
         :root {
             --bg-color: #0d1117;
@@ -116,15 +116,15 @@
 
     <div id="setup-overlay">
         <div class="container">
-            <h2 style="color: white; margin-bottom: 10px;">Fake Typer - Zachowanie Układu</h2>
-            <p style="color: #8b949e; margin-bottom: 20px;">Wklej tekst (zachowamy spacje, tabulatory i entery):</p>
+            <h2 style="color: white; margin-bottom: 10px;">Asystent kodowania</h2>
+            <p style="color: #8b949e; margin-bottom: 20px;">Wklej tekst:</p>
             <textarea id="source-text" placeholder="Wklej tutaj np. kod źródłowy..."></textarea>
-            <button class="btn" onclick="start()">URUCHOM SYMULACJĘ</button>
+            <button class="btn" onclick="start()">URUCHOM ASYSTENTA</button>
         </div>
     </div>
 
     <div id="screen"></div>
-    <div class="hint">ESC - powrót</div>
+    <div class="hint">ESC - powrót do menu</div>
 
     <script>
         let fullText = "";
@@ -158,7 +158,7 @@
                 if (e.key.length > 1 && e.key !== "Enter" && e.key !== "Backspace") return;
 
                 // Dodaj 3 znaki przy każdym kliknięciu dla efektu tempa
-                for(let i=0; i<3; i++) {
+                for(let i=0; i<1; i++) {
                     if (currentIndex < fullText.length) {
                         const output = document.getElementById('output');
                         output.textContent += fullText[currentIndex];
